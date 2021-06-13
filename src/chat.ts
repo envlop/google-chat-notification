@@ -31,10 +31,13 @@ export async function notify(name: string, url: string, status: Status, token: s
   const checksUrl = `${repoUrl}${eventPath}/checks`;
 
   const client = github.getOctokit(token);
+  const commitRef: string = process.env.GITHUB_HEAD_REF
+    ? process.env.GITHUB_HEAD_REF.replace(/refs\/heads\//, '')
+    : sha;
   const {data: commitData} = await client.repos.getCommit({
     owner,
     repo,
-    sha
+    commitRef
   });
   const commitMessage = commitData.commit.message;
 
@@ -72,11 +75,6 @@ export async function notify(name: string, url: string, status: Status, token: s
               keyValue: { topLabel: "ref", content: ref }
             }
           ]
-        },
-        {
-          widgets: [{
-            buttons: [textButton("OPEN CHECKS", checksUrl)]
-          }]
         }
       ]
     }]
