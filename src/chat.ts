@@ -21,7 +21,7 @@ const textButton = (text: string, url: string) => ({
   }
 });
 
-export async function notify(name: string, url: string, status: Status) {
+export async function notify(name: string, url: string, status: Status, token: string) {
   const { owner, repo } = github.context.repo;
   const { eventName, sha, ref } = github.context;
   const { number } = github.context.issue;
@@ -29,6 +29,14 @@ export async function notify(name: string, url: string, status: Status) {
   const eventPath = eventName === 'pull_request' ? `/pull/${number}` : `/commit/${sha}`;
   const eventUrl = `${repoUrl}${eventPath}`;
   const checksUrl = `${repoUrl}${eventPath}/checks`;
+
+  const client = github.getOctokit(token);
+  const {data: commitData} = await client.repos.getCommit({
+    owner,
+    repo,
+    sha
+  });
+  const commitMessage = commitData.commit.message;
 
   const body = {
     cards: [{
@@ -42,6 +50,9 @@ export async function notify(name: string, url: string, status: Status) {
         },
         {
           widgets: [
+            {
+              keyValue: { topLabel: "message", content: commitMessage }
+            },
             {
               keyValue: {
                 topLabel: "repository",
